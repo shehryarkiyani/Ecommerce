@@ -25,32 +25,43 @@ const createUser = AsyncHandler(async (req, res) => {
 });
 const getUser = AsyncHandler(async (req, res) => {
   const users = await User.find({}, "-password");
-  res.status(201).json(users);
+  return res.status(201).json({ data: users });
 });
-const Signin = AsyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-
-  const Existinguser = await User.find({ email });
-
-  if (Existinguser.length === 0)
-    res.status(401).send({ message: "User not exist" });
-  const isPasswordValid = await bcrypt.compare(
-    password,
-    Existinguser[0].password
-  );
-  if (!isPasswordValid) res.status(401).send({ message: "Wrong Password" });
-  const token = jwt.sign(
-    { userId: Existinguser[0]._id },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-  res.cookie("jwt", token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
-
-  res.status(201).json({ user: Existinguser[0] });
+const updateUser = AsyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(req.body.password, salt);
+      user.password = hashPassword;
+    }
+    Object.keys(updates).forEach((key) => {
+      if (key !== "password") {
+        user[key] = updates[key];
+      }
+    });
+    await user.save();
+    return res.status(200).json({ user });
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ message: "Error updating user" });
+  }
+  res.status(201).json({ userId: id });
 });
-export { createUser, getUser, Signin };
+const deleteUser = AsyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  
+  if (user) {
+    await user.deleteOne({ _id: user._id });
+    return res.status(201).json({ message: "User deleted successfully" });
+  } else {
+    res.status(401);
+    throw new Error("User not found");
+  }
+});
+export { createUser, getUser, updateUser, deleteUser };

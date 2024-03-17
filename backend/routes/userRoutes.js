@@ -1,7 +1,10 @@
 import express from "express";
-import { createUser,getUser,Signin } from "../controllers/userController.js";
+import { createUser,getUser,updateUser,deleteUser} from "../controllers/userController.js";
+import { authAdmin,authenticate } from "../middlewares/authMiddleware.js";
 const router = express.Router()
 router.post('/',createUser)
-router.post('/login',Signin)
-router.get('/', getUser);
+
+router.get('/',authenticate ,getUser);
+router.put('/:id',authenticate,updateUser)
+router.delete('/:id',authenticate,deleteUser)
 export default router
