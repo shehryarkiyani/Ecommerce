@@ -25,3 +25,4 @@ const errorHandler = async (err, req, res, next) => {
       break;
   }
 };
+module.exports = errorHandler;
