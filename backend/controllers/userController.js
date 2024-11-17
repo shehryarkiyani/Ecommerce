@@ -66,13 +66,18 @@ const createUser = asyncHandler(async (req, res) => {
   });
 });
 const updateUser = asyncHandler(async (req, res) => {
-  const userExist = await User.findOne({ _id: req.params.id });
-  if (userExist) {
-    const updated_user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+  const user = await User.findOne({ _id: req.params.id });
+  if (user) {
+    user.username = req.body.username || user.username;
+    user.email = req.body.email || user.email;
+    user.isAdmin = req.body.isAdmin || user.isAdmin;
+    if (req.body.password) {
+      const hashPassword = await bcrypt.hash(req.body.password, 10);
+      user.password = hashPassword;
+    }
+    const updated_user = await user.save();
     res.status(200).json({
-      category: updated_user,
+      data: updated_user,
       status: true,
       message: "User updated successfully",
     });
