@@ -7,6 +7,7 @@ const cors = require("cors");
 const categoryRoutes = require("./routes/categoryRoutes.js");
 const userRoutes = require("./routes/userRoutes.js");
 const productRoutes = require("./routes/productRoutes.js");
+
 dotenv.config();
 ConnectDB();
 const app = express();
